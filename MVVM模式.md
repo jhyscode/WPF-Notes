@@ -1,4 +1,4 @@
-# MVVM
+# MVVM模式
 
 **MVVM**（Model–view–viewmodel）是一种软件架构模式。
 
