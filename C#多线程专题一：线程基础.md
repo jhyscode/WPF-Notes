@@ -24,3 +24,125 @@ Windows之所以被称为**抢占式多线程操作系统**，是因为线程可
 
 ## 三、前台线程和后台线程
 
+在.net中线程分为前台线程和后台线程，在一个进程中，当所有前台线程停止运行时，CLR会强制结束仍在运行的任何后台线程，这些后台线程直接被终止，不会抛出异常。
+
+所以我们应该在前台线程中执行我们确实要完成的事情，另外， 应该把非关键的任务使用后台线程，我们用Thread创建的是线程为前台线程。让我们通过下面的一段代码来看看前台线程和后台线成的区别：
+
+```C#
+using System;
+using System.Threading;
+
+ class Program
+    {
+        static void Main(string[] args)
+        {
+            // 创建一个新线程（默认为前台线程）
+            Thread backthread = new Thread(Worker);
+
+            // 使线程成为一个后台线程
+            backthread.IsBackground = true;
+
+            // 通过Start方法启动线程
+            backthread.Start();
+
+            // 如果backthread是前台线程，则应用程序大约5秒后才终止
+            // 如果backthread是后台线程，则应用程序立即终止
+            Console.WriteLine("Return from Main Thread");
+        }
+        private static void Worker()
+        {
+            // 模拟做10秒
+            Thread.Sleep(5000);
+
+            // 下面语句，只有由一个前台线程执行时，才会显示出来
+            Console.WriteLine("Return from Worker Thread");
+        }
+}
+```
+
+运行上面代码可以发现：控制台中显示字符串: Return form Main Thread 后就退出了， 字符串 Return from Worker Thread字符串根本就没有显示，这是因为此时的backthread线程为后台线程，当主线程（执行Main方法的线程，主线程当然也是前台线程了）结束运行后，CLR会强制终止后台线程的运行，整个进程就被销毁了，并不会等待后台线程运行完后才销毁。如果把 backthread.IsBackground = true; 注释掉后， 就可以看到控制台过5秒后就输出 Return from Worker Thread。再在Worker方法最后加一句 代码：Console.Read(); 就可以看到这样的结果了：
+
+![image-20200112171153195](img/image-20200112171153195.png)
+
+**注意**：有些人可能会问我不想把 backthread.IsBackground = true;注释掉， 又想把Worker()方法中的字符串输出在控制台上怎么做呢？ 其实是有解决的办法的， 我们可以调用thread.Join()方法来实现，Join()方法能保证主线程（前台线程）在异步线程thread（后台线程）运行结束后才会运行。
+
+实现代码如下：
+
+```c#
+using System;
+using System.Threading;
+ class Program
+    {
+        static void Main(string[] args)
+        {
+			// 创建一个新线程（默认为前台线程）
+            Thread backthread = new Thread(Worker);
+
+            // 使线程成为一个后台线程
+            backthread.IsBackground = true;
+
+            // 通过Start方法启动线程
+            backthread.Start();
+            backthread.Join();
+
+            // 模拟主线程的输出
+            Thread.Sleep(2000);
+
+            Console.WriteLine("Return from Main Thread");
+            Console.Read();
+        }
+
+        private static void Worker()
+        {
+            // 模拟做3秒
+            Thread.Sleep(3000);
+
+            // 下面语句，只有由一个前台线程执行时，才会显示出来
+            Console.WriteLine("Return from Worker Thread");
+
+        }
+}
+```
+
+运行结果（调用Join方法后后台线程会阻塞主线程所以主线程会后输出）：
+
+![image-20200112171550671](img/image-20200112171550671.png)
+
+## 四、简单线程的使用
+
+其实在上面介绍前台线程和后台线程的时候已经通过ThreadStart委托创建了一个线程了，此时已经实现了一个多线程的一个过程，为此系列中将多线程也是做一个铺垫吧。下面通过**ParameterizedThreadStart**委托的方式来实现多线程。
+
+以**ParameterizedThreadStart**委托的方式来实现多线程：
+
+```C#
+using System;
+using System.Threading;
+ class Program
+    {
+        static void Main(string[] args)
+        {
+			// 创建一个新线程（默认为前台线程）
+            Thread backthread = new Thread(new ParameterizedThreadStart(Worker));
+
+            // 通过Start方法启动线程
+            backthread.Start("123");
+
+            // 如果backthread是前台线程，则应用程序大约5秒后才终止
+            // 如果backthread是后台线程，则应用程序立即终止
+            Console.WriteLine("Return from Main Thread");
+        }
+
+        private static void Worker(object data)
+        {
+            // 模拟做5秒
+            Thread.Sleep(5000);
+
+            // 下面语句，只有由一个前台线程执行时，才会显示出来
+            Console.WriteLine(data + " Return from Worker Thread");
+            Console.Read();
+        }
+}
+```
+
+注意：此时Worker方法传入了一个参数，并且Start方法也传递了一个字符传参数。 对比与之前创建Thread的不同，运行结果为：
+
