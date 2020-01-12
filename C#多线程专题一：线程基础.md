@@ -146,3 +146,4 @@ using System.Threading;
 
 注意：此时Worker方法传入了一个参数，并且Start方法也传递了一个字符传参数。 对比与之前创建Thread的不同，运行结果为：
 
+![image-20200112180429094](img/image-20200112180429094.png)
