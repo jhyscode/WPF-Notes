@@ -31,8 +31,7 @@ Windows之所以被称为**抢占式多线程操作系统**，是因为线程可
 ```C#
 using System;
 using System.Threading;
-
- class Program
+class Program
     {
         static void Main(string[] args)
         {
@@ -71,7 +70,7 @@ using System.Threading;
 ```c#
 using System;
 using System.Threading;
- class Program
+class Program
     {
         static void Main(string[] args)
         {
@@ -117,7 +116,7 @@ using System.Threading;
 ```C#
 using System;
 using System.Threading;
- class Program
+class Program
     {
         static void Main(string[] args)
         {
